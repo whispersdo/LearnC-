@@ -2,7 +2,6 @@
 学习C++模板
 空明流转的教程，写得很好理解，还没写完：https://github.com/wuye9036/CppTemplateTutorial
 
-
 */
 
 #include<iostream>

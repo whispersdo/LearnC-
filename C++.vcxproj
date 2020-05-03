@@ -63,9 +63,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="test.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="CPP2.0.cpp" />
     <ClCompile Include="STL.cpp" />
     <ClCompile Include="Template.cpp" />
