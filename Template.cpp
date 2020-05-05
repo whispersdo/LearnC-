@@ -226,7 +226,11 @@ void test_sfinae() {
 	h<D1>(0);
 }
 /*
-#include <iostream>*/
+https://zh.cppreference.com/w/cpp/types/is_enum
+https://cloud.tencent.com/developer/ask/120661
+https://stackoverflow.com/questions/13082635/boostis-enum-how-it-works
+https://stackoverflow.com/questions/11316912/is-enum-implementation
+*/
 #include <type_traits>
 
 
