@@ -108,8 +108,3 @@ namespace _4 {
 
 }
 
-int main()
-{
-	return 0;
-}
-

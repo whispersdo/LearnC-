@@ -7,6 +7,7 @@
 #include<iostream>
 #include<bitset>
 #include<vector>
+#include <tuple>
 using namespace std;
 
 #define WRONG_CODE_ENABLED 0
@@ -15,8 +16,9 @@ using namespace std;
 // 可变数量的模板参数
 // ---------------
 
-// print任意数量任意类型，替代FG_TRACE
 
+// print任意数量任意类型，替代FG_TRACE
+namespace _1_ {
 // 特化
 void print() {}
 
@@ -40,6 +42,7 @@ void test_print()
 	print(1, 2, "helo", bitset<16>(0101), 42, 9.30f);
 }
 
+}
 
 // ------------------Tuple------------------
 // .	 .	  .	   .	.	 Head
@@ -50,6 +53,9 @@ void test_print()
 // Head
 
 // 任意数量类型的容器，应用场景？，性能？
+namespace _2_ 
+{
+using namespace _1_;
 
 template<class... Ts> class Tuple;
 
@@ -122,7 +128,6 @@ const auto& Tuple<Head, Ts...>::get() const
 
 // -------------- std tuple --------------
 
-#include <tuple>
 
 void test_tuple()
 {
@@ -146,7 +151,46 @@ void test_tuple()
 	cout << get<2>(t2) << endl;
 }
 
-// SFINAE
+}
+
+// SFINAE 替换失败不是错误，会继续尝试替换其他
+
+namespace _3_ {
+
+template <typename A>
+struct B { using type = typename A::type; };
+
+template <
+	class T,
+	class U = typename T::type,      // 若 T 无成员 type 则为 SFINAE 失败
+	class V = typename B<T>::type    // 若 T 无成员 type 则为硬错误（ C++14 起保证不出现，因为到 U 的默认模板实参中的替换会首先失败）
+> void foo(int) {};
+
+struct C { using type = int; };
+struct D { using type2 = int; };
+
+#define explicit_instantiate 0
+#if explicit_instantiate
+
+template<> void foo<B<C>>(int) {} // 函数模板显式实例化
+
+#if WRONG_CODE_ENABLED
+	template<> void foo<B<D>>(int) {}
+#endif
+
+#else
+
+void test_sfinae1()
+{
+	foo<B<C>>(0);
+#if WRONG_CODE_ENABLED
+	foo<B<D>>(0); // 函数模板隐式实例化
+#endif
+}
+
+#endif // explicit_instantiate
+
+}
 
 template <int I> struct X { };
 template <template <class T> class> struct Z { };
@@ -180,4 +224,33 @@ void test_sfinae() {
 	f<B1>(0);
 	g<C1>(0);
 	h<D1>(0);
+}
+/*
+#include <iostream>*/
+#include <type_traits>
+
+
+class AA {};
+
+enum E {};
+
+enum class Ec : int {};
+
+template<class T>
+struct my_is_enum { static const bool value = true; };
+
+template<>
+struct my_is_enum<enum T> { static const bool value = false; };
+
+
+int main()
+{
+	cout << my_is_enum<AA>::value << '\n';
+	cout << my_is_enum<E>::value << '\n';
+	cout << my_is_enum<Ec>::value << '\n';
+	cout << my_is_enum<int>::value << '\n';
+
+	is_enum<AA>;
+
+	system( "pause" );
 }
