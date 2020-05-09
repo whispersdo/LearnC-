@@ -88,23 +88,37 @@ namespace _3 {
 // [ captures ] <tparams>(optional)(c++20) ( params ) specifiers exception attr -> ret requires(optional)(c++20) { body }
 namespace _4 {
 
+	template<class T>
+	void printaddress(const T& v)
+	{
+		cout << "v address:" << reinterpret_cast<int>(&v) << endl;
+	}
+
 	void test_lambda()
 	{
 		int id = 0;
-		auto f = [id]() mutable -> int { std::cout << id; return ++id; };
+		printaddress(id);
+		auto f = [id]() mutable -> int { printaddress(id); std::cout << id; return ++id; };
+		cout << typeid(f).name() << endl; // lambda是一个functor
 
-		decltype(f) f1(); // lambda是一个functor
-
-		std::cout << typeid(f).name() << std::endl;
+#if 0 // 无法被构造
+		decltype(f) f1(); 
+		cout << f1()() << endl; 
+#endif
 
 		id = 42;
-		// std::cout << f1()() << std::endl; 
-		std::cout << f() << std::endl;
-		std::cout << f() << std::endl;
-		std::cout << id << std::endl;
+		cout << f() << endl;
+		cout << f() << endl;
+		cout << id << endl;
 	}
 
 }
 
 }
+
+//void main()
+//{
+//	Cpp2::_4::test_lambda();
+//	system( "pause" );
+//}
 

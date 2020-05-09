@@ -225,6 +225,10 @@ void test_sfinae() {
 	g<C1>(0);
 	h<D1>(0);
 }
+
+
+// std::is_enum
+
 /*
 https://zh.cppreference.com/w/cpp/types/is_enum
 https://cloud.tencent.com/developer/ask/120661
@@ -247,7 +251,7 @@ template<>
 struct my_is_enum<enum T> { static const bool value = false; };
 
 
-int main()
+void test_is_enum()
 {
 	cout << my_is_enum<AA>::value << '\n';
 	cout << my_is_enum<E>::value << '\n';
