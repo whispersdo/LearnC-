@@ -127,8 +127,6 @@ const auto& Tuple<Head, Ts...>::get() const
 }
 
 // -------------- std tuple --------------
-
-
 void test_tuple()
 {
 	Tuple<int, float, string> t1(1, 0.1f, "h1");
@@ -154,7 +152,6 @@ void test_tuple()
 }
 
 // SFINAE Ìæ»»Ê§°Ü²»ÊÇ´íÎó£¬»á¼ÌÐø³¢ÊÔÌæ»»ÆäËû
-
 namespace _3_ {
 
 template <typename A>
@@ -192,6 +189,8 @@ void test_sfinae1()
 
 }
 
+namespace _4_{
+
 template <int I> struct X { };
 template <template <class T> class> struct Z { };
 template <class T> void f(typename T::Y*) {}
@@ -226,8 +225,10 @@ void test_sfinae() {
 	h<D1>(0);
 }
 
+}
 
 // std::is_enum
+namespace _5_{
 
 /*
 https://zh.cppreference.com/w/cpp/types/is_enum
@@ -235,8 +236,8 @@ https://cloud.tencent.com/developer/ask/120661
 https://stackoverflow.com/questions/13082635/boostis-enum-how-it-works
 https://stackoverflow.com/questions/11316912/is-enum-implementation
 */
-#include <type_traits>
 
+#include <type_traits>
 
 class AA {};
 
@@ -261,4 +262,37 @@ void test_is_enum()
 	is_enum<AA>;
 
 	system( "pause" );
+}
+
+// is int
+template<class T>
+struct is_int { static const bool value = false; };
+
+template<>
+struct is_int<int> { static const bool value = true; };
+
+#define MAKETRAIT(is_t, t, v) \
+template<> \
+struct is_t<t> { static const bool value = v; };
+
+MAKETRAIT(is_int, unsigned, true)
+
+#if WRONG_CODE_ENABLED
+MAKETRAIT(is_float, float, true)
+#endif
+
+template<class T>
+struct is_float { static const bool value = false; };
+
+MAKETRAIT(is_float, float, true)
+MAKETRAIT(is_float, double, true)
+
+#define MAKETRAIT0(is_t) \
+template<class T> \
+struct is_t { static const bool value = false; };
+
+MAKETRAIT0(is_ptr)
+MAKETRAIT(is_ptr, nullptr_t, true)
+MAKETRAIT(is_ptr, void*, true)
+
 }
