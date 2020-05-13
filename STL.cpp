@@ -73,7 +73,7 @@ void consumer()
     }
 }
 
-int main()
+int thread_main()
 {
     std::thread th1(producer1);
     std::thread th2(producer2);

@@ -259,23 +259,70 @@ void test_is_enum()
 	cout << my_is_enum<Ec>::value << '\n';
 	cout << my_is_enum<int>::value << '\n';
 
-	is_enum<AA>;
+	bool a = is_enum<AA>::value;
 
 	system( "pause" );
 }
 
-// is int
+namespace _0_ {
+
+// 编译器魔法
+// STRUCT TEMPLATE is_enum
+#if 0
+template <class _Ty>
+struct is_enum : bool_constant<__is_enum(_Ty)> {}; // determine whether _Ty is an enumerated type
+#endif
+
+// 排除法
+template <class _Tp>
+struct libc_is_enum : public integral_constant<bool,	!is_void<_Tp>::value &&
+														!is_integral<_Tp>::value &&
+														!is_floating_point<_Tp>::value &&
+														!is_array<_Tp>::value &&
+														!is_pointer<_Tp>::value &&
+														!is_reference<_Tp>::value &&
+														!is_member_pointer<_Tp>::value &&
+														!is_union<_Tp>::value &&
+														!is_class<_Tp>::value &&
+														!is_function<_Tp>::value > 
+{
+	// 
+};
+
+class AA {};
+
+enum E {};
+
+enum class Ec : int {};
+
+constexpr bool v0 = libc_is_enum<AA>::value;
+constexpr bool v1 = libc_is_enum<E>::value;
+constexpr bool v2 = libc_is_enum<Ec>::value;
+constexpr bool v3 = libc_is_enum<int>::value;
+
+}
+
+// 先找一个最简单的吧，如何判断整形(int，long，char....)
+
+// 第一次尝试，使用特化
+namespace _1_ {
+
 template<class T>
 struct is_int { static const bool value = false; };
 
 template<>
 struct is_int<int> { static const bool value = true; };
+template<>
+struct is_int<long> { static const bool value = true; };
+
+//...后面有一堆要写的，首先想到可以用define
 
 #define MAKETRAIT(is_t, t, v) \
 template<> \
 struct is_t<t> { static const bool value = v; };
 
 MAKETRAIT(is_int, unsigned, true)
+MAKETRAIT(is_int, char, true)
 
 #if WRONG_CODE_ENABLED
 MAKETRAIT(is_float, float, true)
@@ -294,5 +341,121 @@ struct is_t { static const bool value = false; };
 MAKETRAIT0(is_ptr)
 MAKETRAIT(is_ptr, nullptr_t, true)
 MAKETRAIT(is_ptr, void*, true)
+
+//...比一个一个写好一些，但是看起来不太好看，能不能用variadic
+//期待的写法是is_int<int, long, char, ...>
+
+}
+
+// 第一次尝试
+namespace _2_ {
+	
+template<class... T> struct is_int;
+template<> struct is_int<> {};
+
+template<class T>
+struct is_int<T> {
+	static const bool value = true;
+};
+
+template<class T0, class... T >
+struct is_int<T0, T...> {
+	static const bool value = is_int<T0>::value || is_int<T...>::value;
+};
+
+constexpr int v = is_int<int, float, char>::value;
+
+// 现在所有的类型全是int了，怎么做区分呢？看看答案
+namespace stdimp{
+
+constexpr int v = std::is_integral<int>::value;
+
+template<class T>
+constexpr bool stdisint = std::_Is_any_of_v<T, int, bool, unsigned>;
+
+constexpr int v1 = stdisint<int>;
+constexpr int v2 = std::_Is_any_of_v<int, int>;
+
+}
+
+}
+
+// 怎么改造呢？
+// 再尝试
+namespace _3_ {
+
+//先实现is_same，特化特殊情况即可（相同类型更特殊）
+template<class T, class Tp>
+struct is_same { static const bool value = false; };
+
+template<class T>
+struct is_same<T, T> { static const bool value = true; };
+
+#if 1
+template<class... T> struct is_int { static const bool value = false; };
+#else
+template<class... T> struct is_int;
+template<> struct is_int<> { static const bool value = false; };
+template<class T> struct is_int<T> { static const bool value = false; };
+#endif
+
+template<class T, class T0>
+struct is_int<T, T0> {
+	static const bool value = is_same<T, T0>::value;
+};
+
+template<class T, class T0, class... Ts>
+struct is_int<T, T0, Ts...> {
+	static const bool value = is_same<T, T0>::value || is_int<T, Ts...>::value;
+};
+
+// 重点在于分离T和后面的Ts，让后面的可以迭代
+constexpr int v1 = is_int<float, int, float, char>::value;
+constexpr int v2 = is_int<float>::value;
+constexpr int v3 = is_int<>::value;
+
+// 可以定义了
+template<class T>
+using my_is_integral = is_int<T, bool, char, signed char, unsigned char, wchar_t, char16_t, char32_t,
+								 short, unsigned short, int, unsigned int, long, unsigned long, 
+								 long long, unsigned long long>;
+
+constexpr int v4 = my_is_integral<int>::value;
+constexpr int v5 = my_is_integral<const int>::value; // removecv先不管了，思路和特化指针去掉指针一样 template<T*> + using type = T;
+constexpr int v6 = my_is_integral<unsigned>::value;
+constexpr int v7 = my_is_integral<double>::value;
+
+// 剩下的再说吧
+
+namespace _z_{
+
+template <class _Tp>
+struct libc_is_enum : public integral_constant<bool, 
+	!is_void<_Tp>::value &&
+	!my_is_integral<_Tp>::value &&
+	!is_floating_point<_Tp>::value &&
+	!is_array<_Tp>::value &&
+	!is_pointer<_Tp>::value &&
+	!is_reference<_Tp>::value &&
+	!is_member_pointer<_Tp>::value &&
+	!is_union<_Tp>::value && // 这个也是编译器干的 。。。
+	!is_class<_Tp>::value && // 这个也是编译器干的 。。。!std::is_union<T>
+	!is_function<_Tp>::value > {}; // https://en.cppreference.com/w/cpp/types/is_function 这儿有实现，一坨
+
+class AA {};
+
+enum E {};
+
+enum class Ec : int {}; 
+
+constexpr bool v0 = libc_is_enum<AA>::value;
+constexpr bool v1 = libc_is_enum<E>::value;
+constexpr bool v2 = libc_is_enum<Ec>::value;
+constexpr bool v3 = libc_is_enum<int>::value;
+
+}
+
+}
+
 
 }
