@@ -4,6 +4,18 @@
 
 */
 
+template<int N>
+struct Foo {
+	static const int value = N * Foo<N - 1>::value;
+};
+
+template<>
+struct Foo<1> {
+	static const int value = 1;
+};
+
+constexpr int a = Foo<10>::value;
+
 #include<iostream>
 #include<bitset>
 #include<vector>
@@ -342,7 +354,7 @@ MAKETRAIT0(is_ptr)
 MAKETRAIT(is_ptr, nullptr_t, true)
 MAKETRAIT(is_ptr, void*, true)
 
-//...比一个一个写好一些，但是看起来不太好看，能不能用variadic
+//...比一个一个写好一些，但是看起来不太好看，能不能用vairiadic
 //期待的写法是is_int<int, long, char, ...>
 
 }
@@ -457,5 +469,8 @@ constexpr bool v3 = libc_is_enum<int>::value;
 
 }
 
+#include<array>
+
+std::array<int, 5> b;
 
 }
