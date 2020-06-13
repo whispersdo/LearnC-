@@ -22,7 +22,7 @@ void test_searchall()
         cout << it->str() << endl;
 }
 
-int main() {
+int test_main() {
 
     test_searchall();
 
