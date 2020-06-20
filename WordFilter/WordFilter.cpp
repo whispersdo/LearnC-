@@ -33,26 +33,23 @@ int main()
     wcout << str <<endl;
     wcout << L"===================" << endl;
 
-    Pattern pat(0);
+    Pattern<wchar_t> pat(0);
     
-    pat.add(L"word;");
-    pat.add(L"wore;");
-    pat.add(L"worwww;");
-    pat.add(L"aorwww;");
+    pat.add(L"word");
+    pat.dump();
+    pat.add(L"wore");
+    pat.dump();
+    pat.add(L"worwww");
+    pat.dump();
+    pat.add(L"aorwww");
+    pat.dump();
 
-    pat.verbose();
+    for (size_t i = 0; i < 100; ++i)
+        str[i] = L"word wored worwww, a, ao , aorww, aorwww, w"[i];
 
-
-
-
-
-
-
-
-
-
-
-
+    wf.filter(str, &pat);
+    wcout << str << endl;
+    wcout << L"===================" << endl;
 
     return 0;
 }
