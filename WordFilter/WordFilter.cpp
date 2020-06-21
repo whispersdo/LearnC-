@@ -14,40 +14,53 @@ struct processtime {
     }
 };
 
+struct wstr {
+    wchar_t* ptr;
+    wstr(const wchar_t* ws) {
+        size_t strlen = wcslen( ws ) + 1;
+        ptr = new wchar_t[strlen];
+        wcscpy_s(ptr, strlen, ws);
+    };
+    ~wstr()
+    {
+        delete ptr;
+    };
+};
+
 int main()
 {
     // Êä³öÖÐÎÄ
     wcout.imbue(locale("chs"));
 
     wfilter wf;
-    wf.addWord(L"Å£±Æ");
-    wf.addWord(L"Å£±Æ");
-    wf.addWord(L"bg");
+    wf.addWord(L"ABCDEFG");
+    wf.addWord(L"ABCDEFH");
+    wf.addWord(L"ABCDEFJ");
+    wf.addWord(L"ABCDEFX");
 
-    wchar_t* str = new wchar_t[100];
-    for (size_t i = 0; i < 100; ++i)
-        str[i] = L"do Å£Äá¬”±ÆÄØ you b¹·ag huh? ÎÖÈÕ"[i];
+    wstr p(L"ABCDEFG ABCDEFH ABCDEFJ ABCDEFXxx");
+    wchar_t* str = p.ptr;
 
     wf.filter(str);
+    
 
     wcout << str <<endl;
+    wcout << "c:" << wf.counter() << endl;
     wcout << L"===================" << endl;
 
     Pattern<wchar_t> pat(0);
     
-    pat.add(L"word");
-    pat.dump();
-    pat.add(L"wore");
-    pat.dump();
-    pat.add(L"worwww");
-    pat.dump();
-    pat.add(L"aorwww");
+    pat.add(L"ABCDEFG");
+    pat.add(L"ABCDEFH");
+    pat.add(L"ABCDEFJ");
+    pat.add(L"ABCDEFX");
     pat.dump();
 
-    for (size_t i = 0; i < 100; ++i)
-        str[i] = L"word wored worwww, a, ao , aorww, aorwww, w"[i];
+    wstr p2(L"ABCDEFG ABCDEFH ABCDEFJ ABCDEFXxx");
+    str = p2.ptr;
 
     wf.filter(str, &pat);
+    wcout << "c:" << wf.counter() << endl;
     wcout << str << endl;
     wcout << L"===================" << endl;
 

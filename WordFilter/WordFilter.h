@@ -25,7 +25,7 @@ public:
     Pattern():curr(0) {};
     Pattern(T word) :curr(word) {};
     ~Pattern() {
-    
+        // remove all nodes;
     };
 
     class iterator {
@@ -136,6 +136,7 @@ public:
 
 	void filter(T* str) 
 	{
+        counter_ = 0;
         for (auto& word : words_ )
         {
             Replace(str, word);
@@ -144,8 +145,14 @@ public:
 
     void filter(T* str, Pattern<T>* pattern)
     {
+        counter_ = 0;
         replace(str, pattern, 0);
     };
+
+    uint32_t counter() const
+    {
+        return counter_;
+    }
 
 private:
 
@@ -157,6 +164,9 @@ private:
         found = false;
         while (str[si] != end_)
         {
+            if (str[si] != replacer_)
+                counter_++;
+
             if (str[si] == pattern[pi] && str[si] != replacer_)
             {
                 if (firstmatch == false)
@@ -172,7 +182,9 @@ private:
 
                     //直接替换
                     for (size_t i = begin; i <= end; i++)
+                    {
                         str[i] = replacer_;
+                    }
 
                     break;
                 }
@@ -195,22 +207,36 @@ private:
 
         while (str[strIndex] != end_)
         {
-            if (str[strIndex] == currentPattern->curr)//匹配上了，记录位置
+            //wcout << str[strIndex] << strIndex;
+            if (str[strIndex] == replacer_)
             {
+                strIndex++;
+                continue;
+            }
+
+            //wcout << "[" << currentPattern->pos << L"," << currentPattern->curr << "]";
+            if (str[strIndex] == currentPattern->curr)// 匹配上了，记录位置
+            {
+                counter_++;
+
                 currentPattern->pos = strIndex;
                 strIndex++;
-                if (currentPattern->IsTerminal())//pattern到头了，匹配成功了，从当前位置重新匹配最高的parent
+                if (currentPattern->IsTerminal())// pattern到头了，匹配成功了，从当前位置重新匹配最高的parent
                 {
                     // 替换
                     size_t begin = currentPattern->GetRoot()->pos;
                     size_t end = currentPattern->pos;
                     for (size_t i = begin; i <= end; i++)
+                    {
                         str[i] = replacer_;
+                    }
 
                     currentPattern = currentPattern->GetRoot();
 
-                } // pattern还有，就匹配下一个
-                else if (str[strIndex] == end_)//str到头了，匹配失败了，回溯
+                    // wcout << endl;
+
+                } 
+                else if (str[strIndex] == end_)// str到头了，匹配失败了，回溯
                 {
                     currentPattern = currentPattern->GetNext();
 
@@ -222,11 +248,17 @@ private:
                     {
                         return;
                     }
+
+                    wcout << endl;
                 }
-                else
+                else //pattern还有，就匹配下一个
                 {
+                    currentPattern = currentPattern->nexts.front();
+
+                    /*
                     for (auto& p : currentPattern->nexts)
                         replace(str, p, strIndex);
+                    */
                 }
             }
             else
@@ -249,9 +281,11 @@ private:
  
 	static T replacer_;
     const static T end_ = T(0);
+    static uint32_t counter_;
 };
 
 using wfilter = Filter<wchar_t>;
 using cfilter = Filter<char>;
+uint32_t wfilter::counter_ = 0;
 wchar_t wfilter::replacer_ = L'*';
 char cfilter::replacer_ = '*';
