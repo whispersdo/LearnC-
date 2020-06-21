@@ -129,7 +129,7 @@ public:
 	~Filter() {};
 public:
     // using T0 = typename std::remove_pointer_t<T>;
-	void addWord(const T* word)
+	void add(const T* word)
 	{ 
 		words_.push_back(word);	
 	};
@@ -183,7 +183,7 @@ private:
                     //直接替换
                     for (size_t i = begin; i <= end; i++)
                     {
-                        str[i] = replacer_;
+                        //str[i] = replacer_;
                     }
 
                     break;
@@ -214,11 +214,11 @@ private:
                 continue;
             }
 
+            counter_++;
+
             //wcout << "[" << currentPattern->pos << L"," << currentPattern->curr << "]";
             if (str[strIndex] == currentPattern->curr)// 匹配上了，记录位置
             {
-                counter_++;
-
                 currentPattern->pos = strIndex;
                 strIndex++;
                 if (currentPattern->IsTerminal())// pattern到头了，匹配成功了，从当前位置重新匹配最高的parent
@@ -228,7 +228,7 @@ private:
                     size_t end = currentPattern->pos;
                     for (size_t i = begin; i <= end; i++)
                     {
-                        str[i] = replacer_;
+                        //str[i] = replacer_;
                     }
 
                     currentPattern = currentPattern->GetRoot();
@@ -261,9 +261,23 @@ private:
                     */
                 }
             }
-            else
+            else // 失败了，看看下一个字符
             {
                 strIndex++;
+                if (str[strIndex] == end_) // str到头了，匹配还是失败，回溯
+                {
+                    currentPattern = currentPattern->GetNext();
+
+                    if (currentPattern) // 到头-1+1=0
+                    {
+                        strIndex = currentPattern->parent->pos + 1;
+                    }
+                    else // 后面没有了，全部完成
+                    {
+                        return;
+                    }
+
+                }
             }
         }
     }
