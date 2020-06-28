@@ -1,8 +1,10 @@
 #include"WordFilter.h"
 
-#define FilterCount 1000
-#define LoopCount 1000
+#define SrcCount 100
+#define FilterCount 100
+#define LoopCount 10000
 
+const wchar_t* prefix = L"";
 
 struct processtime {
     chrono::time_point<chrono::system_clock> tp;
@@ -35,18 +37,30 @@ int main()
 {
     // 输出中文
     wcout.imbue(locale("chs"));
+    
+    // 生成被过滤字符串
+    wstring wssrcstr(L"");
+    for (size_t i = 0; i < SrcCount; i++)
+    {
+        wssrcstr += wstring(prefix) + to_wstring(rand());
+    }
+
+    wchar_t* srcstr = const_cast<wchar_t*>(wssrcstr.c_str());
+
+    wcout << "prefix:" << prefix << endl;
+    wcout << "srcstr:" << srcstr << endl;
 
     wfilter wf;
-    wf.add(L"ABCDEFABCDEFABCDEFABCDEFABCDEF");
+    wf.add(prefix);
     for (size_t i = 0; i < FilterCount; i++)
     {
-        wstring ws(L"ABCDEFABCDEFABCDEFABCDEFABCDEF");
+        wstring ws(prefix);
         ws += to_wstring(i);
         wf.add(ws.c_str());
     }
 
     {
-        wstr p(L"ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFG ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFH ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFJ ABCDEFABCDEFABCDEFABCDEFABCDEFX学习");
+        wstr p(srcstr);
         wchar_t* str = p.ptr;
         processtime pt1 = processtime();
         for (size_t i = 0;i < LoopCount; i++)
@@ -59,22 +73,24 @@ int main()
 
     Pattern<wchar_t> pat(0);
 
-    pat.add(L"ABCDEFABCDEFABCDEFABCDEFABCDEF");
+    pat.add(prefix);
     for (size_t i = 0; i < FilterCount; i++)
     {
-        wstring ws(L"ABCDEFABCDEFABCDEFABCDEFABCDEF");
+        wstring ws(prefix);
         ws += to_wstring(i);
         pat.add(ws.c_str());
     }
+
+    pat.prepare();
+    pat.dump();
     
     {
-        wstr p2(L"ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFG ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFH ABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFJ ABCDEFABCDEFABCDEFABCDEFABCDEFX学习");
+        wstr p2(srcstr);
         wchar_t* str = p2.ptr;
         processtime pt1 = processtime();
         for (size_t i = 0; i < LoopCount; i++)
             wf.filter(str, &pat);
     }
-
 
     wcout << "c:" << wf.counter() << endl;
     //wcout << str << endl;
