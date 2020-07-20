@@ -224,7 +224,7 @@ public:
 		Intersect it(r, geo, t);
 		it.calc();
 
-		//return (it.reflectRay.D);
+		return spheredir(it.nor, 0.0f, 0.0f);
 
 		vec3 color = geo->mtl->Emissive + geo->mtl->Albedo * radiance(it.reflectRay, depth);
 		return color;

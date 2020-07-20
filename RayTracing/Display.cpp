@@ -8,6 +8,17 @@ using namespace std;
 
 void test()
 {
+	// Math
+	vec3 X =	 { 1.0f, 0.0f, 0.0f };
+	vec3 Y = vec3( 0.0f, 1.0f, 0.0f );
+	vec3 Z		 { 0.0f, 0.0f, 1.0f };
+
+	{
+		vec3 trans = spheredir(X, 0.0f, 0.0f);
+	}
+
+	assert(spheredir(vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f) == vec3(0.0f, 1.0f, 0.0f));
+
 	Ray ray(vec3(), vec3(0.f, -1.f, 0.f));
 	{
 		assert(ray.getPosition(0) == vec3());

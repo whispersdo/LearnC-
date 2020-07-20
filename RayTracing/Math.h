@@ -179,14 +179,21 @@ vec3 refract(const vec3& I, const vec3& N, float eta)
 
 float rand01()
 {
-	return (rand() & 0xFFFF) / 0xFFFF;
+	return float(rand() & 0xFFFF) / 0xFFFF;
 }
 
-vec3 randdir(const vec3& nor, float r)
+vec3 sph2xyz(float theta, float phi)
 {
-	float x = rand01() * 2 - 1;
-	float y = rand01() * 2 - 1;
-	float z = rand01();
+	return vec3(cos(theta) * cos(phi), cos(theta) * sin(phi), sin(theta));
+}
 
-	return vec3(nor);
+vec3 spheredir(const vec3& Z, float theta, float phi)
+{
+	vec3 X = Z.x() < 1.0f ? vec3(1.f, 0.f, 0.f) : vec3(0.f, 1.0f, 0.0f);
+	vec3 Y = normalize(cross(Z, X));
+	X = normalize(cross(Y, Z));
+
+	vec3 n = sph2xyz(theta, phi);
+	vec3 n2 = vec3(dot(n, vec3(X.x(), Y.x(), Z.x())), dot(n, vec3(X.y(), Y.y(), Z.y())), dot(n, vec3(X.z(), Y.z(), Z.z())));
+	return n2;
 }
