@@ -5,7 +5,7 @@
 
 using namespace std;
 
-#define PI 3.14159
+#define PI 3.1415926f
 
 template<class T>
 T clamp(T a, T min = 0, T max = 1)
@@ -182,9 +182,9 @@ float rand01()
 	return float(rand() & 0xFFFF) / 0xFFFF;
 }
 
-vec3 sph2xyz(float theta, float phi)
+vec3 sph2xyz(float theta, float phi) // theta = Æ«ÀëzµÄ½Ç¶È
 {
-	return vec3(cos(theta) * cos(phi), cos(theta) * sin(phi), sin(theta));
+	return vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
 }
 
 vec3 spheredir(const vec3& Z, float theta, float phi)

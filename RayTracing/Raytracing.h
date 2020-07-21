@@ -141,18 +141,18 @@ public:
 	{
 		right = normalize(cross(Dir, vec3(0.f,0.f,1.f)));
 		up = normalize(cross(right, Dir));
-		fovscale = tan(0.5 * Fov * PI / 180.0) * 2.0;
+		fovscale = tan(0.5f * Fov * PI / 180.0f) * 2.0f;
 	}
 
 	Ray generateRay(float x, float y)
 	{
-		vec3 r = right * ((x - 0.5) * fovscale);
-		vec3 u = up * ((0.5 - y) * fovscale);
+		vec3 r = right * ((x - 0.5f) * fovscale);
+		vec3 u = up * ((0.5f - y) * fovscale);
 		return Ray(Pos, normalize(Dir + r + u));
 	}
 };
 
-#define GeoCount 4
+#define GeoCount 8
 #define WINDOW_WIDTH 512
 #define WINDOW_HEIGHT 512
 
@@ -170,16 +170,21 @@ public:
 		Mtls[0]->Emissive = vec3(10.0f,1.0f,1.0f);
 		Mtls[0]->Albedo = vec3(0.0f,0.0f,0.0f);
 		Mtls[1] = new Material();
-		Mtls[1]->Emissive = vec3(0.1f, 0.1f, 0.1f);
+		Mtls[1]->Emissive = vec3(0.0f, 0.0f, 0.0f);
 		Mtls[1]->Albedo = vec3(0.5f, 0.5f, 0.5f);
+		Mtls[1]->Roughness = 1.0f;
 
 		/*Mtls[2] = new Material();
 		Mtls[3] = new Material();*/
 
-		Objs[0] = new Sphere(vec3(0.f, 0.f, 200.f), 100.f, Mtls[0]);
-		Objs[1] = new Sphere(vec3(30.f, 0.f, 0.f), 10.f, Mtls[1]);
-		Objs[2] = new Sphere(vec3(0.f, 30.f, 0.f), 10.f, Mtls[1]);
-		Objs[3] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]);
+		Objs[0] = new Sphere(vec3(0.f, 0.f, 200.f), 100.f, Mtls[0]); // Light
+		Objs[1] = new Sphere(vec3(0.f, 0.f, 1e5f + 200.f), 1e5f, Mtls[1]); // 上
+		Objs[2] = new Sphere(vec3(0.f, 0.f, 1e5f - 200.f), 1e5f, Mtls[1]); // 下
+		Objs[3] = new Sphere(vec3(1e5f - 200.f, 0.f, 0.f), 1e5f, Mtls[1]); // 左
+		Objs[4] = new Sphere(vec3(1e5f + 200.f, 0.f, 0.f), 1e5f, Mtls[1]); // 右
+		Objs[5] = new Sphere(vec3(0.f, 1e5f - 200.f, 0.f), 1e5f, Mtls[1]); // 前
+		Objs[6] = new Sphere(vec3(0.f, 1e5f + 200.f, 0.f), 1e5f, Mtls[1]); // 后
+		Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体
 
 		Cam = Camera(vec3(0.f, 150.f, 50.f), vec3(0.f, -1.f, 0.f), 45);
 		Cam.init();
@@ -207,12 +212,8 @@ public:
 	vec3 radiance(const Ray& r, uint32_t depth)
 	{
 		depth ++;
-		if (depth == 3)
-		{
-			int a = 0;
-		}
 
-		if (depth > 150)
+		if (depth > 5)
 			return vec3();
 
 		Geo* geo = nullptr;
@@ -224,26 +225,44 @@ public:
 		Intersect it(r, geo, t);
 		it.calc();
 
-		return spheredir(it.nor, 0.0f, 0.0f);
+		//return spheredir(it.nor, 0.0f, 3.14f);
+		if (geo->mtl->Albedo == vec3(0.0f, 0.0f, 0.0f))
+			return geo->mtl->Emissive;
 
-		vec3 color = geo->mtl->Emissive + geo->mtl->Albedo * radiance(it.reflectRay, depth);
-		return color;
+		float rough = geo->mtl->Roughness;
+		if (rough == 0.0f)
+			return geo->mtl->Emissive + geo->mtl->Albedo * radiance(it.reflectRay, depth);
+
+		float theta = rand01() * rough;
+		float phi = rand01();
+		
+		return it.nor;
+
+		Ray ref(it.pos, spheredir(it.nor, theta, phi));
+		return geo->mtl->Emissive + geo->mtl->Albedo * max(0.0, dot(ref.D, it.nor)) * radiance(ref, depth);
+
+		return vec3();
 	}
 
 	void render()
 	{
 		vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
+		float offsetx = 1.0f / WINDOW_WIDTH;
+		float offsety = 1.0f / WINDOW_HEIGHT;
+		static const size_t samplecount = 1;
+
 		for (size_t i = 0; i < WINDOW_WIDTH; i++)
 		{
 			for (size_t j = 0; j < WINDOW_HEIGHT; j++)
 			{
-				if (i == 256 && j == 256)
+				vec3 sum(.0f, .0f, .0f);
+				for (size_t s = 0; s < samplecount; s++)
 				{
-					Ray r = Cam.generateRay(float(i) / WINDOW_WIDTH, float(j) / WINDOW_WIDTH);
+					Ray r = Cam.generateRay(offsetx * (i + rand01() * 0.5f), offsety * (j + rand01() * 0.5f));
+					sum = sum + radiance(r, 0);
 				}
 
-				Ray r = Cam.generateRay(float(i) / WINDOW_WIDTH, float(j) / WINDOW_WIDTH);
-				framebuffer[i][j] = (uint32_t) radiance(r, 0);
+				framebuffer[i][j] = (uint32_t) (sum / (float) samplecount);
 			}
 		}
 

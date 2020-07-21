@@ -14,7 +14,10 @@ void test()
 	vec3 Z		 { 0.0f, 0.0f, 1.0f };
 
 	{
-		vec3 trans = spheredir(X, 0.0f, 0.0f);
+		vec3 transx = spheredir(X, 0.0f, 0.0f);
+		vec3 transy = spheredir(Y, 0.0f, 0.0f);
+		vec3 transz = spheredir(Z, 0.0f, 0.0f);
+		vec3 transc = spheredir(vec3(.5f, .25f, .4f), 0.0f, 0.0f);
 	}
 
 	assert(spheredir(vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f) == vec3(0.0f, 1.0f, 0.0f));
