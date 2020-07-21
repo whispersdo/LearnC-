@@ -1,10 +1,12 @@
 #include "Screen.h"
 #include "Raytracing.h"
+#include <iostream> 
 #include <assert.h>
+#include <thread>
+
+using namespace std;
 
 Screen* screen = nullptr;
-#include <iostream> 
-using namespace std;
 
 void test()
 {
@@ -32,19 +34,37 @@ void test()
 	Sphere sph(vec3(0.f, 0.f, 0.f), 50, nullptr);
 	{
 		Ray r(vec3(0.f,0.f,0.f), vec3(0.f, 0.f, 1.0f));
-		float a = sph.interset(r);
+		float a = sph.intersect(r);
 		assert(a == 50.f);
 	}
 	{
 		Ray r(vec3(0.f, 0.f, 100.f), vec3(0.f, 0.f, -1.0f));
-		float a = sph.interset(r);
+		float a = sph.intersect(r);
 		assert(a == 50.f);
 	}
 	{
 		Sphere sph(vec3(0.f, 0.f, 50.f), 30, nullptr);
 		Ray r(vec3(0.f, 50.f, 50.f), vec3(0.f, -1.0f, 0.f));
-		float a = sph.interset(r);
+		float a = sph.intersect(r);
 		assert(a == 20.f);
+	}
+	{
+		Sphere sph(vec3(1e5f + 100.f, 0.f, 0.f), 1e5f, nullptr);
+		Ray r(vec3(0.f, 200.f, 0.f), normalize(vec3(1.0f, -1.0f, 0.f)));
+		float a = sph.intersect(r);
+		Intersect it(r, &sph, a);
+		it.calc();
+		
+		assert(it.nor.x());
+	}
+	{
+		Sphere sph(vec3(1e5f + 100.f, 0.f, 0.f), 1e5f, nullptr);
+		Ray r(vec3(0.f, 200.f, 0.f), normalize(vec3(1.0f, -1.0f, 0.f)));
+		float a = sph.intersect(r);
+		Intersect it(r, &sph, a);
+		it.calc();
+
+		assert(it.nor.x());
 	}
 }
 
@@ -54,7 +74,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR cmdLine,
 
 	screen = new Screen();
 	Scene* sen = new Scene;
-	sen->render();
+
+	auto render = [sen] {
+		sen->render();
+	};
+	
+	thread rd(render);
 
     uint32_t size = 512;
 	int ret = screen->init(size, size, "Raytracing");

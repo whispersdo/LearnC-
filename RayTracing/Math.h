@@ -1,10 +1,13 @@
 #pragma once
 // math : vector & sphere
-#include<iostream>
-#include<stdarg.h>
+#include <cstdlib>
+#include <stdarg.h>
+#include <iostream>
+#include <ctime>
 
 using namespace std;
 
+#define float double
 #define PI 3.1415926f
 
 template<class T>
@@ -177,11 +180,6 @@ vec3 refract(const vec3& I, const vec3& N, float eta)
 	return t * float(cost2 > 0 ? 1 : -1);
 }
 
-float rand01()
-{
-	return float(rand() & 0xFFFF) / 0xFFFF;
-}
-
 vec3 sph2xyz(float theta, float phi) // theta = Æ«ÀëzµÄ½Ç¶È
 {
 	return vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
@@ -196,4 +194,9 @@ vec3 spheredir(const vec3& Z, float theta, float phi)
 	vec3 n = sph2xyz(theta, phi);
 	vec3 n2 = vec3(dot(n, vec3(X.x(), Y.x(), Z.x())), dot(n, vec3(X.y(), Y.y(), Z.y())), dot(n, vec3(X.z(), Y.z(), Z.z())));
 	return n2;
+}
+
+float rand01()
+{
+	return float(rand() & 0xFFFF) / 0xFFFF;
 }

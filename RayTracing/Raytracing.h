@@ -40,7 +40,7 @@ public:
 	Geo(Material* m) : mtl(m) {}
 
 	virtual vec3 getNormal(const vec3& pos) const { return vec3(); }
-	virtual float interset(const Ray& r) const { return 0.f; }
+	virtual float intersect(const Ray& r) const { return 0.f; }
 };
 
 class Sphere : public Geo
@@ -54,7 +54,7 @@ public:
 
 	virtual vec3 getNormal(const vec3& pos) const override { return normalize(pos - O);	}
 
-	virtual float interset(const Ray& r) const override
+	virtual float intersect(const Ray& r) const override
 	{
 		// Ray	  : P(t) = O + Dt
 		// Sphere : |P - O| = R
@@ -88,7 +88,7 @@ public:
 
 	virtual vec3 getNormal(const vec3& pos) const override { return N; }
 
-	virtual float interset(const Ray& r) const override
+	virtual float intersect(const Ray& r) const override
 	{
 		// Ray	 : P(t) = O + Dt
 		// Plane : P - Nd ⊥ N => dot(N, P-Nd) = 0 => dot(N,P) = d
@@ -118,8 +118,12 @@ public:
 	{
 		pos = ray.getPosition(t);
 		nor = geo->getNormal(pos);
-		reflectRay = Ray(pos, geo->mtl->getReflectRay(ray.D, nor));
-		refractRay = Ray(pos, geo->mtl->getRefractRay(ray.D, nor));
+
+		if (geo->mtl)
+		{
+			reflectRay = Ray(pos, geo->mtl->getReflectRay(ray.D, nor));
+			refractRay = Ray(pos, geo->mtl->getRefractRay(ray.D, nor));
+		}
 	}
 };
 
@@ -167,27 +171,27 @@ public:
 	Scene() 
 	{
 		Mtls[0] = new Material(); 
-		Mtls[0]->Emissive = vec3(10.0f,1.0f,1.0f);
+		Mtls[0]->Emissive = vec3(1.0f,1.0f,1.0f);
 		Mtls[0]->Albedo = vec3(0.0f,0.0f,0.0f);
 		Mtls[1] = new Material();
 		Mtls[1]->Emissive = vec3(0.0f, 0.0f, 0.0f);
 		Mtls[1]->Albedo = vec3(0.5f, 0.5f, 0.5f);
-		Mtls[1]->Roughness = 1.0f;
+		Mtls[1]->Roughness = 0.1f;
 
 		/*Mtls[2] = new Material();
 		Mtls[3] = new Material();*/
 
 		Objs[0] = new Sphere(vec3(0.f, 0.f, 1e3f+99.f), 1e3f, Mtls[0]); // Light
 		Objs[1] = new Sphere(vec3(0.f, 0.f, 1e5f + 100.f), 1e5f, Mtls[1]); // 上
-		Objs[2] = new Sphere(vec3(0.f, 0.f, 1e5f - 100.f), 1e5f, Mtls[1]); // 下
-		Objs[3] = new Sphere(vec3(1e5f - 100.f, 0.f, 0.f), 1e5f, Mtls[1]); // 左
+		Objs[2] = new Sphere(vec3(0.f, 0.f, -1e5f - 100.f), 1e5f, Mtls[1]); // 下
+		Objs[3] = new Sphere(vec3(-1e5f - 100.f, 0.f, 0.f), 1e5f, Mtls[1]); // 左
 		Objs[4] = new Sphere(vec3(1e5f + 100.f, 0.f, 0.f), 1e5f, Mtls[1]); // 右
 		Objs[5] = new Sphere(vec3(0.f, 1e5f + 300.f, 0.f), 1e5f, Mtls[1]); // 前
-		Objs[6] = new Sphere(vec3(0.f, 1e5f - 300.f, 0.f), 1e5f, Mtls[1]); // 后
-		Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体1
-		Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体2
+		Objs[6] = new Sphere(vec3(0.f, -1e5f - 100.f, 0.f), 1e5f, Mtls[1]); // 后
+		//Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体1
+		Objs[7] = new Sphere(vec3(0.f, 0.f, 1130.f), 10.f, Mtls[1]); // 物体2
 
-		Cam = Camera(vec3(0.f, 299.f, 50.f), vec3(0.f, -1.f, 0.f), 45);
+		Cam = Camera(vec3(0.f, 299.f, 0.f), vec3(0.f, -1.f, 0.f), 45);
 		Cam.init();
 
 		for (size_t i = 0; i < WINDOW_WIDTH; i++)
@@ -201,7 +205,7 @@ public:
 	{
 		for (auto o : Objs)
 		{
-			float t1 = o->interset(r);
+			float t1 = o->intersect(r);
 			if (t1 < t && t1 >= 0)
 			{
 				t = t1;
@@ -214,7 +218,7 @@ public:
 	{
 		depth ++;
 
-		if (depth > 5)
+		if (depth > 9)
 			return vec3();
 
 		Geo* geo = nullptr;
@@ -238,7 +242,7 @@ public:
 		float phi = rand01();
 		
 		//return spheredir(it.nor, 1.f, 1.f);
-		return normalize(it.nor) * -1.f;
+		//return normalize(it.nor) * -1.f;
 
 		Ray ref(it.pos, spheredir(it.nor, theta, phi));
 		return geo->mtl->Emissive + geo->mtl->Albedo * max(0.f, dot(ref.D, it.nor)) * radiance(ref, depth);
@@ -248,6 +252,8 @@ public:
 
 	void render()
 	{
+		size_t t = time(0);
+		srand(t);
 		vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
 		float offsetx = 1.0f / WINDOW_WIDTH;
 		float offsety = 1.0f / WINDOW_HEIGHT;
