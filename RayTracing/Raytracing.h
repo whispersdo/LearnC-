@@ -177,16 +177,17 @@ public:
 		/*Mtls[2] = new Material();
 		Mtls[3] = new Material();*/
 
-		Objs[0] = new Sphere(vec3(0.f, 0.f, 200.f), 100.f, Mtls[0]); // Light
-		Objs[1] = new Sphere(vec3(0.f, 0.f, 1e5f + 200.f), 1e5f, Mtls[1]); // 上
-		Objs[2] = new Sphere(vec3(0.f, 0.f, 1e5f - 200.f), 1e5f, Mtls[1]); // 下
-		Objs[3] = new Sphere(vec3(1e5f - 200.f, 0.f, 0.f), 1e5f, Mtls[1]); // 左
-		Objs[4] = new Sphere(vec3(1e5f + 200.f, 0.f, 0.f), 1e5f, Mtls[1]); // 右
-		Objs[5] = new Sphere(vec3(0.f, 1e5f - 200.f, 0.f), 1e5f, Mtls[1]); // 前
-		Objs[6] = new Sphere(vec3(0.f, 1e5f + 200.f, 0.f), 1e5f, Mtls[1]); // 后
-		Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体
+		Objs[0] = new Sphere(vec3(0.f, 0.f, 1e3f+99.f), 1e3f, Mtls[0]); // Light
+		Objs[1] = new Sphere(vec3(0.f, 0.f, 1e5f + 100.f), 1e5f, Mtls[1]); // 上
+		Objs[2] = new Sphere(vec3(0.f, 0.f, 1e5f - 100.f), 1e5f, Mtls[1]); // 下
+		Objs[3] = new Sphere(vec3(1e5f - 100.f, 0.f, 0.f), 1e5f, Mtls[1]); // 左
+		Objs[4] = new Sphere(vec3(1e5f + 100.f, 0.f, 0.f), 1e5f, Mtls[1]); // 右
+		Objs[5] = new Sphere(vec3(0.f, 1e5f + 300.f, 0.f), 1e5f, Mtls[1]); // 前
+		Objs[6] = new Sphere(vec3(0.f, 1e5f - 300.f, 0.f), 1e5f, Mtls[1]); // 后
+		Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体1
+		Objs[7] = new Sphere(vec3(0.f, 0.f, 30.f), 10.f, Mtls[1]); // 物体2
 
-		Cam = Camera(vec3(0.f, 150.f, 50.f), vec3(0.f, -1.f, 0.f), 45);
+		Cam = Camera(vec3(0.f, 299.f, 50.f), vec3(0.f, -1.f, 0.f), 45);
 		Cam.init();
 
 		for (size_t i = 0; i < WINDOW_WIDTH; i++)
@@ -236,10 +237,11 @@ public:
 		float theta = rand01() * rough;
 		float phi = rand01();
 		
-		return it.nor;
+		//return spheredir(it.nor, 1.f, 1.f);
+		return normalize(it.nor) * -1.f;
 
 		Ray ref(it.pos, spheredir(it.nor, theta, phi));
-		return geo->mtl->Emissive + geo->mtl->Albedo * max(0.0, dot(ref.D, it.nor)) * radiance(ref, depth);
+		return geo->mtl->Emissive + geo->mtl->Albedo * max(0.f, dot(ref.D, it.nor)) * radiance(ref, depth);
 
 		return vec3();
 	}
