@@ -10,6 +10,22 @@ Screen* screen = nullptr;
 
 void test()
 {
+	{
+		int a = rand();
+		int b = rand();
+		int c = rand();
+		int d = rand();
+		cout << a << b << c << d;
+	}
+	{
+		srand(time(0));
+		int a = rand();
+		int b = rand();
+		int c = rand();
+		int d = rand();
+		cout << a << b << c << d;
+	}
+
 	// Math
 	vec3 X =	 { 1.0f, 0.0f, 0.0f };
 	vec3 Y = vec3( 0.0f, 1.0f, 0.0f );
