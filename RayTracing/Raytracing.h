@@ -171,19 +171,19 @@ public:
 	Scene() 
 	{
 		Mtls[0] = new Material(); 
-		Mtls[0]->Emissive = vec3(1.0f,1.0f,1.0f);
+		Mtls[0]->Emissive = vec3(10.0f,10.0f,10.0f);
 		Mtls[0]->Albedo = vec3(0.0f,0.0f,0.0f);
 		Mtls[1] = new Material();
 		Mtls[1]->Emissive = vec3(0.0f, 0.0f, 0.0f);
-		Mtls[1]->Albedo = vec3(0.5f, 0.5f, 0.5f);
+		Mtls[1]->Albedo = vec3(.75f, .25f, .25f);
 		Mtls[1]->Roughness = 1.0f;
 		Mtls[2] = new Material();
 		Mtls[2]->Emissive = vec3(0.0f, 0.0f, 0.0f);
-		Mtls[2]->Albedo = vec3(1.0f, 0.5f, 0.5f);
+		Mtls[2]->Albedo = vec3(.75f, .25f, .25f);
 		Mtls[2]->Roughness = 1.0f;
 		Mtls[3] = new Material();
 		Mtls[3]->Emissive = vec3(0.0f, 0.0f, 0.0f);
-		Mtls[3]->Albedo = vec3(0.5f, 1.0f, 0.5f);
+		Mtls[3]->Albedo = vec3(0.5f, 0.75f, 0.5f);
 		Mtls[3]->Roughness = 1.0f;
 		Mtls[4] = new Material();
 		Mtls[4]->Emissive = vec3(0.0f, 0.0f, 0.0f);
@@ -225,8 +225,89 @@ public:
 			}
 		}
 	}
-
 	vec3 radiance(const Ray& r, uint32_t depth)
+	{
+		depth++;
+
+		Geo* geo = nullptr;
+		float t = 1e30f;
+		intersect(r, geo, t);
+		if (geo == nullptr) // Ã»¶«Î÷
+			return vec3(0.f, 0.f, 0.f);
+
+		Intersect it(r, geo, t);
+		it.calc();
+
+		if (depth > 100)
+			return geo->mtl->Emissive;
+
+		if (geo->mtl->Albedo == vec3(0.0f, 0.0f, 0.0f))
+		{
+			return geo->mtl->Emissive;
+		}
+		else
+		{
+			float theta = rand01() * 0.5 * PI;
+			float phi = rand01() * 2. * PI;
+
+			Ray ref(it.pos, spheredir(it.nor, theta, phi));
+
+			return geo->mtl->Emissive + geo->mtl->Albedo * radiance(ref, depth);
+		}
+
+		if (geo->mtl->Albedo == vec3(0.0f, 0.0f, 0.0f))
+			return geo->mtl->Emissive;
+
+		float rough = geo->mtl->Roughness;
+		if (rough == 0.0f)
+			return geo->mtl->Emissive + geo->mtl->Albedo * radiance(it.reflectRay, depth);
+		if (rough == 1.f) // Lambert 
+		{
+			vec3 dis = vec3(0., .0, 100.) - it.pos;
+			vec3 pdir = normalize(dis);
+			float l2 = dot(dis, dis);
+			float lu = 100.0f / sqrt(l2);
+			{
+				float theta = rand01() * 0.1f * PI * 0.5f;
+				float phi = rand01() * 2.f * PI;
+
+				//return spheredir(it.nor, 1.f, 1.f);
+				//return normalize(it.nor) * -1.f;
+
+				Ray rlight(it.pos * 0.99, spheredir(pdir, theta, phi));
+				Geo* geo2 = nullptr;
+				float t2 = 1e30f;
+				intersect(rlight, geo2, t2);
+
+				float lamb = max(0.f, dot(it.nor, pdir));
+				//return geo2->mtl->Albedo;
+				if ((geo2->mtl->Emissive == vec3(0.f, 0.f, 0.f)))
+					lamb *= 0.5f;
+
+				return geo->mtl->Emissive + geo->mtl->Albedo * lu * lamb;
+			}
+		}
+
+
+		float samplecount = 0.5 * sqrt(50 - depth);
+		samplecount = 1.0f;
+		vec3 diffuse(0.f, 0.f, 0.f);
+		for (size_t i = 0; i < (size_t)samplecount; i++)
+		{
+			float theta = rand01() * rough * PI * 0.5f;
+			float phi = rand01() * 2.f * PI;
+
+			//return spheredir(it.nor, 1.f, 1.f);
+			//return normalize(it.nor) * -1.f;
+
+			Ray ref(it.pos, spheredir(it.nor, theta, phi));
+			diffuse = diffuse + geo->mtl->Emissive + geo->mtl->Albedo * max(0.f, dot(ref.D, it.nor)) * radiance(ref, depth);
+		}
+
+		return diffuse / ((float)(size_t)samplecount);
+	}
+
+	vec3 radiance1(const Ray& r, uint32_t depth)
 	{
 		depth ++;
 
@@ -302,7 +383,7 @@ public:
 		vec4 white(1.0f, 1.0f, 1.0f, 1.0f);
 		float offsetx = 1.0f / WINDOW_WIDTH;
 		float offsety = 1.0f / WINDOW_HEIGHT;
-		static const size_t samplecount = 64;
+		static const size_t samplecount = 1;
 
 		for (size_t i = 0; i < WINDOW_WIDTH; i++)
 		{

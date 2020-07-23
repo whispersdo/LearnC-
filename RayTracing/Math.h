@@ -8,7 +8,7 @@
 using namespace std;
 
 #define float double
-#define PI 3.1415926f
+#define PI 3.141592653589793238462643
 
 template<class T>
 T clamp(T a, T min = 0, T max = 1)
